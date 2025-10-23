@@ -2,6 +2,7 @@
 #include <list>
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 #pragma once
 
 
@@ -48,10 +49,14 @@ public:
 	void setPos(int, int);
 	void setTexture(const std::string&);
 
+    static std::mutex farm_mtx;
+    
 	DisplayObject(const std::string&, const int, const int, const int, const int);
 	~DisplayObject();
+
 	void updateFarm();
 	void erase();
+
 
 	static void redisplay(BakeryStats& stats);
 

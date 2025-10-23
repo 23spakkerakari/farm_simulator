@@ -20,8 +20,10 @@ DisplayObject::~DisplayObject()
 {
 }
 
+std::mutex DisplayObject::farm_mtx;
 void DisplayObject::updateFarm()
 {
+	std::lock_guard<std::mutex> lock(farm_mtx);
 	auto res = theFarm.insert({id, *this});
 	if (!res.second) {
 		res.first->second = *this;
@@ -33,6 +35,7 @@ void DisplayObject::erase()
 	// if (it != theFarm.end()) {
 	// 	theFarm.erase(it);
 	// }
+	std::lock_guard<std::mutex> lk(farm_mtx);                
 	theFarm.erase(id);
 }
 void DisplayObject::setPos(int x, int y)
@@ -47,7 +50,11 @@ void DisplayObject::setTexture(const std::string& str)
 
 void DisplayObject::redisplay(BakeryStats& _stats)
 {
-	auto snapshot = std::make_shared<std::unordered_map<int,DisplayObject>>(theFarm);
+	std::shared_ptr<std::unordered_map<int,DisplayObject>> snapshot;
+	{
+		std::lock_guard<std::mutex> lock(farm_mtx);
+		snapshot = std::make_shared<std::unordered_map<int,DisplayObject>>(theFarm);
+	}
 	std::atomic_store_explicit(
 		&buffedFarmPointer,
 		snapshot,
